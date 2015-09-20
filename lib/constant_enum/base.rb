@@ -119,6 +119,7 @@ module ConstantEnum
     # verbose because we need to mimic where({}) which returns everything.
     # It also supports where(type: 'video', active: true) for multiple restrictions.
     def self.where(hash={})
+      raise RecordNotFound, "No records defined for #{self}" if @data.nil?
       results = []
       @data.each do |name,struct|
         found = true # where({})
@@ -142,20 +143,20 @@ module ConstantEnum
     singleton_class.send :alias_method, :find_each, :each
 
     def self.ids
-      @enum.map{|r| r.last}
+      enum.map{|r| r.last}
     end
 
     def self.names
-      @enum.map{|r| r.first}
+      enum.map{|r| r.first}
     end
 
     def self.count
-      @enum.keys.length
+      enum.keys.length
     end
 
     # Dropdown is actually [Title, name] for Rails 4.1 enums
     def self.dropdown
-      @enum.collect{|name,id| [name.to_s.titleize, name] }
+      enum.collect{|name,id| [name.to_s.titleize, name] }
     end
 
     #

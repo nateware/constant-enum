@@ -1,10 +1,13 @@
 require 'test_helper'
 
+class EmptyEnum < ConstantEnum::Base
+end
+
 class Genre < ConstantEnum::Base
-  enum_of skate:      1,
-          surf:       2,
-          snow:       3,
-          bike:       4
+  enum_of skate: 1,
+          surf:  2,
+          snow:  3,
+          bike:  4
 end
 
 class AssetType < ConstantEnum::Base
@@ -18,17 +21,31 @@ class ConstantEnum::Test < Minitest::Test
     refute_nil ::ConstantEnum::VERSION
   end
 
-  def test_simple_declarations_work
+  def test_for_empty_enum
+    assert_nil EmptyEnum.enum
+    assert_raises ConstantEnum::RecordNotFound do
+      EmptyEnum.where(name: 'foo')
+    end
+  end
+
+  def test_simple_declarations
     assert_equal 4, Genre.count
     assert_equal 2, Genre[:surf]
-    assert_equal Genre.new(:snow, 3, nil), Genre.find(3)
     assert_equal 4, Genre['bike']
     assert_raises ConstantEnum::RecordNotFound do
       Genre[:no_such_key]
     end
   end
 
-  def test_complex_declarations_work
+  def test_helper_methods
+    gen = Genre.new(:snow, 3, nil)
+    assert_equal gen, Genre.find(3)
+    assert_equal :snow, gen.name
+    assert_equal 'Snow', gen.title
+    assert_equal 3, gen.id
+  end
+
+  def test_complex_declarations
     assert_equal 3, AssetType.count
     assert_equal 3, AssetType.all.size
     assert_equal 1, AssetType[:photo]
@@ -38,12 +55,13 @@ class ConstantEnum::Test < Minitest::Test
     end
   end
 
-  def test_activerecord_finders_work
+  def test_activerecord_finders
     at = AssetType.find(1)
     assert_equal 1, at.id
     assert_equal :photo, at.name
     assert_equal 'jpg', at.type
     assert_equal 'photos', at.bucket
+    assert_equal 'Photo', at.title
 
     assert_nil AssetType.find_by_name('tacos')
     assert_raises ConstantEnum::RecordNotFound do
